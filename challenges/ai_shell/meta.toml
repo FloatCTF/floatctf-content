@@ -1,0 +1,19 @@
+name = "ai_shell"
+version = "1.0.0"
+author = "fb0sh@outlook.com"
+category = "ai"
+description = "这个执行命令小模型，会听你的话吗？"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+[flag]
+type = "dynamic"
+
+[docker]
+port = 80
+
+[docker.recommended_resources]
+cpu_millis = 500
+memory_bytes = 268435456
+pids_limit = 100

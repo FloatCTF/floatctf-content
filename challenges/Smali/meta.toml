@@ -1,0 +1,14 @@
+name = "Smali"
+version = "1.0.0"
+author = "ablklice@gmail.com"
+category = "reverse"
+description = "smali后缀文件，何意味"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+attachment = "attachment/Crackme.smali"
+
+[flag]
+type = "static"
+value = "floatctf{Sm4liRiver}"

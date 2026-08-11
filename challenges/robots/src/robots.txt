@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /backup/
+Disallow: /s3cr3t_b4ckd00r.html
+Allow: /
+
+注意：千万不要访问 s3cr3t_b4ckd00r.html 页面！

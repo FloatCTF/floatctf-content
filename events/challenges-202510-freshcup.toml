@@ -1,0 +1,44 @@
+schema_version = 1
+
+id = "challenges-202510-freshcup"
+title = "2025 FloatCTF 新生赛"
+description = "2025 FloatCTF 新生赛题目仓库"
+started_at = "2025-10-19 14:30"
+ended_at = "2025-10-19 18:30"
+
+# BEGIN GENERATED CONTENT
+[content]
+challenges = [
+    "Android_reverse",
+    "Cirno's perfect math class",
+    "Flag_in_the_model",
+    "FloatCTF-qidong",
+    "Hajimi",
+    "Smali",
+    "ai_shell",
+    "backdoor",
+    "base64",
+    "caesar",
+    "comment",
+    "cookie",
+    "ctf_start",
+    "dir_enum",
+    "easy_reverse",
+    "frontend_bypass",
+    "komachi's book",
+    "learn_http",
+    "matrix_rsa",
+    "miku_flag",
+    "orin's pack",
+    "php_file",
+    "png",
+    "ret2text",
+    "robots",
+    "strings_attached1",
+    "strings_attached2",
+    "xzmu_anime_club",
+]
+
+gameboxes = [
+]
+# END GENERATED CONTENT

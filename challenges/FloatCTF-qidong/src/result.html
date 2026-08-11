@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>提交结果 - FloatCTF 启动</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>提交结果</h1>
+    <div id="out"></div>
+    <p class="hint">可以返回上一页重新尝试。</p>
+    <p><a href="index.html">返回录制页面</a></p>
+  </main>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const similarity = parseFloat(params.get("similarity") || "0");
+    const out = document.getElementById("out");
+    const FLAG_VALUE = "__FLAG__";
+
+    if (!Number.isFinite(similarity)) {
+      out.innerHTML = "<p>参数缺失或无效。</p>";
+    } else if (similarity >= 99.9) {
+      out.innerHTML = `
+        <div class="flag-card">
+          <h2>恭喜！</h2>
+          <p>相似度：<strong>${similarity.toFixed(4)}%</strong></p>
+          <p>这是你的 flag：</p>
+          <pre class="flag">${FLAG_VALUE}</pre>
+        </div>`;
+    } else {
+      out.innerHTML = `
+        <div class="flag-card warn">
+          <h2>说得不够标准哦</h2>
+          <p>当前相似度：<strong>${similarity.toFixed(4)}%</strong>(需要 >= 99.9%)</p>
+          <p>再试一次，或者考虑有没有更快捷的办法？</p>
+        </div>`;
+    }
+  </script>
+</body>
+</html>

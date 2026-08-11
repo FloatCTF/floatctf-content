@@ -1,0 +1,14 @@
+name = "matrix_rsa"
+version = "1.0.0"
+author = "myx2727461997@gmail.com"
+category = "crypto"
+description = "你告诉我什么叫矩阵RSA？"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+attachment = "attachment/matrix_rsa.py"
+
+[flag]
+type = "static"
+value = "floatctf{3asy_matr1x_rsa}"

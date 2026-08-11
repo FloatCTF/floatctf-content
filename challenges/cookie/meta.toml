@@ -1,0 +1,19 @@
+name = "cookie"
+version = "1.0.0"
+author = "myx2727461997@gmail.com"
+category = "web"
+description = "想成为管理员吗？也许你需要一个特殊的饼干！"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+[flag]
+type = "dynamic"
+
+[docker]
+port = 80
+
+[docker.recommended_resources]
+cpu_millis = 500
+memory_bytes = 268435456
+pids_limit = 100
