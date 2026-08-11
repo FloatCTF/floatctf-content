@@ -1,0 +1,14 @@
+name = "Cirno's perfect math class"
+version = "1.0.0"
+author = "hakureiyukari01@gmail.com"
+category = "misc"
+description = "琪露诺发现幻想乡巴士里有base编码"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+attachment = "attachment/cpmc.zip"
+
+[flag]
+type = "static"
+value = "flag{Gensokyo-has-no-bus-but-have-baka}"

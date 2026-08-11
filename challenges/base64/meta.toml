@@ -1,0 +1,12 @@
+name = "base64"
+version = "1.0.0"
+author = "fb0sh@outlook.com"
+category = "crypto"
+description = "ZmxhZ3tiMWQxZmNmNy01NzQyLTQ0OTctODYwOC1iZGU1NDlmMWQ1MmV9"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+[flag]
+type = "static"
+value = "flag{b1d1fcf7-5742-4497-8608-bde549f1d52e}"

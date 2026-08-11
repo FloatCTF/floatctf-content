@@ -1,0 +1,24 @@
+*{box-sizing:border-box}
+:root{
+  --bg:#0b0c10; --card:#14161a; --text:#e9eef5; --muted:#9aa4b2;
+  --accent:#7c3f00; /* 棕 */
+  --cyan:#008b8b;   /* 青 */
+  --btn:#2b3038; --btn-hover:#343a45; --warn:#644a00; --ok:#004d40;
+}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,'Hiragino Sans GB','Noto Sans SC','PingFang SC','Microsoft YaHei',sans-serif}
+.container{max-width:980px;margin:40px auto;padding:0 16px}
+h1{font-size:clamp(24px,4vw,38px);margin:0 0 8px}
+.desc{color:var(--muted);margin:0 0 24px}
+.controls{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 16px}
+button{background:var(--btn);border:1px solid #3a404b;color:var(--text);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.15s}
+button:hover{background:var(--btn-hover)}
+button[disabled]{opacity:.5;cursor:not-allowed}
+.status{display:flex;gap:24px;flex-wrap:wrap;margin:10px 0 20px;color:var(--muted)}
+.canvas-wrap{display:grid;grid-template-columns:1fr;gap:18px}
+.canvas-col{background:var(--card);border:1px solid #232730;border-radius:16px;padding:12px}
+.canvas-col h3{margin:8px 0 12px;font-size:16px;color:var(--muted)}
+canvas{width:100%;height:auto;background:#101318;border-radius:12px;border:1px solid #1f232b}
+.hint{color:var(--muted);margin-top:10px}
+.flag-card{background:var(--card);border:1px solid #233;border-radius:16px;padding:16px}
+.flag-card.warn{border-color:#442}
+.flag{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:16px}

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FloatCTF 启动</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>FloatCTF 启动</h1>
+    <p class="desc">大声喊出 <strong>“FloatCTF 启动”</strong> 并录音。相似度需要 <strong>≥ 99.9%</strong> 才能拿到 flag哦。</p>
+    <div class="controls">
+      <button id="btnRecord">开始录制</button>
+      <button id="btnPlaySample">播放示例音频</button>
+      <button id="btnPlayRec" disabled>播放录制音频</button>
+      <button id="btnSubmit" disabled>提交</button>
+    </div>
+
+    <div class="status">
+      <div>授权/状态：<span id="status">尚未开始</span></div>
+      <div>当前相似度：<span id="similarity">-.-</span>%</div>
+    </div>
+
+    <div class="canvas-wrap">
+      <div class="canvas-col">
+        <h3>参考音频波形（棕色）</h3>
+        <canvas id="refCanvas" width="900" height="220"></canvas>
+      </div>
+      <div class="canvas-col">
+        <h3>录制音频波形（青色）</h3>
+        <canvas id="recCanvas" width="900" height="220"></canvas>
+      </div>
+    </div>
+
+    <p class="hint">提示：如果浏览器未弹出麦克风权限请求，请检查权限或更换 Chrome/Edge。移动端部分机型暂不支持。</p>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

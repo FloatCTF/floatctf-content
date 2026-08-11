@@ -1,0 +1,14 @@
+name = "png"
+version = "1.0.0"
+author = "fb0sh@outlook.com"
+category = "misc"
+description = "图片里面有什么"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+attachment = "attachment/fr33t.png"
+
+[flag]
+type = "static"
+value = "flag{8506842e-f825-4786-9380-1b4d7d51cdec}"

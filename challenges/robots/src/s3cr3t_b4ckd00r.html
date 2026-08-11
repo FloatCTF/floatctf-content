@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Secret Backdoor</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .terminal {
+            background-color: #0a0a0a;
+            padding: 30px;
+            border: 2px solid #00ff00;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        .flag {
+            background-color: #00ff00;
+            color: #000;
+            padding: 10px;
+            margin: 20px 0;
+            font-size: 1.2em;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <h1>🎉 Congratulations! 🎉</h1>
+        <p>你找到了隐藏的后门页面！</p>
+        <p>robots.txt 文件用于告诉搜索引擎爬虫哪些页面不应该被访问。</p>
+        <p>但这也可能会暴露一些敏感路径...</p>
+        <div class="flag">
+            flag{test_flag}
+        </div>
+    </div>
+</body>
+</html>

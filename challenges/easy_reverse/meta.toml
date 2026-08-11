@@ -1,0 +1,14 @@
+name = "easy_reverse"
+version = "1.0.0"
+author = "ablklice@gmail.com"
+category = "reverse"
+description = "使用tea算法进行解密,答案使用flag{}进行包裹"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+attachment = "attachment/TEA.exe"
+
+[flag]
+type = "static"
+value = "flag{c5e0f5f6f79e5b9b988f8f04611a7802}"

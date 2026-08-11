@@ -1,0 +1,14 @@
+name = "strings_attached1"
+version = "1.0.0"
+author = "ablklice@gmail.com"
+category = "reverse"
+description = "找到了一串字符串，要用什么算法解密呢"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+attachment = "attachment/strings_attached1.exe"
+
+[flag]
+type = "static"
+value = "flag{YOU_FIND_IT_HAHA}"

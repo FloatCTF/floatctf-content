@@ -1,0 +1,14 @@
+name = "Flag_in_the_model"
+version = "1.0.0"
+author = "myx2727461997@gmail.com"
+category = "misc"
+description = ".pt？这是什么后缀名？"
+
+# Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
+# safe_name = "xxx"
+
+attachment = "attachment/Netron.pt"
+
+[flag]
+type = "static"
+value = "floatctf{0xdf2a78e_you_are_right!^v^}"
