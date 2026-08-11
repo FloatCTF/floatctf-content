@@ -4,11 +4,11 @@
 
 ## 1. 创建私有仓库
 
-先创建一个空的 Private Repository，例如：
+创建一个空的 Private Repository，例如：
 
 ```text
 git@github.com:fb0sh/freshcup-2027.git
-````
+```
 
 ## 2. 克隆模板
 
@@ -20,7 +20,7 @@ git clone -b event/base --depth 1 --single-branch \
 cd freshcup-2027
 ```
 
-目录名就是 Event ID，建议使用：
+目录名即 Event ID，建议使用：
 
 ```text
 freshcup-2027
@@ -42,22 +42,48 @@ origin   → 当前比赛私有仓库
 upstream → FloatCTF/floatctf-content
 ```
 
+并创建：
+
+```text
+challenges/
+gameboxes/
+events/<event-id>.toml
+```
+
 ## 4. 开发
 
-正常使用 Git：
+将 Challenge 和 GameBox 分别放入：
+
+```text
+challenges/
+gameboxes/
+```
+
+每个子目录必须包含：
+
+```text
+meta.toml
+```
+
+内容发生变化后运行：
+
+```bash
+./scripts/sync-event.sh
+```
+
+脚本会自动：
+
+- 扫描 `challenges/`
+- 扫描 `gameboxes/`
+- 更新 `events/<event-id>.toml`
+- 生成 `docs/<event-id>.md`
+
+然后正常提交：
 
 ```bash
 git add .
 git commit -m "..."
 git push
-```
-
-比赛内容：
-
-```text
-challenges/   Challenge
-gameboxes/    GameBox
-events/       Event
 ```
 
 ## 5. 发布
@@ -68,17 +94,19 @@ events/       Event
 ./scripts/publish.sh
 ```
 
-脚本会将本场比赛发布到：
+脚本会发布到：
 
 ```text
-event/freshcup-2027
+floatctf-content:event/freshcup-2027
 ```
 
-并用于合并到：
+并创建合并到：
 
 ```text
-floatctf-content/main
+floatctf-content:main
 ```
+
+的 Pull Request。
 
 > 比赛公开前，只向 `origin` 推送，不要向 `upstream` 推送。
 

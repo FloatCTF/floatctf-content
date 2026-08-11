@@ -9,6 +9,10 @@ die() {
     exit 1
 }
 
+info() {
+    echo "==> $*"
+}
+
 [[ -n "$PRIVATE_REPO_URL" ]] ||
     die "usage: $0 <private-repo-url>"
 
@@ -20,28 +24,97 @@ cd "$ROOT"
 
 EVENT="$(basename "$ROOT")"
 
-# 初始化 Event 工作目录
-mkdir -p challenges gameboxes events
+[[ "$EVENT" =~ ^[a-z0-9][a-z0-9-]*$ ]] ||
+    die "invalid event id: $EVENT"
 
-# event/base -> main
 CURRENT_BRANCH="$(git branch --show-current)"
 
-[[ "$CURRENT_BRANCH" == "event/base" ]] ||
-    die "expected branch 'event/base', got '$CURRENT_BRANCH'"
+case "$CURRENT_BRANCH" in
+    "event/base")
+        info "Renaming branch event/base -> main"
+        git branch -m main
+        ;;
+    "main")
+        ;;
+    *)
+        die "expected branch 'event/base' or 'main', got '$CURRENT_BRANCH'"
+        ;;
+esac
 
-git branch -m main
+# The cloned event/base branch tracks the public repository.
+# Remove that tracking so an accidental `git push` cannot publish anything.
+git branch --unset-upstream >/dev/null 2>&1 || true
 
-# 公共仓库成为 upstream
-git remote rename origin upstream
+# -----------------------------------------------------------------------------
+# Directories
+# -----------------------------------------------------------------------------
 
-# 私有比赛仓库成为 origin
-git remote add origin "$PRIVATE_REPO_URL"
+info "Creating event directories"
+
+mkdir -p \
+    challenges \
+    gameboxes \
+    events
+
+# -----------------------------------------------------------------------------
+# Event manifest
+# -----------------------------------------------------------------------------
+
+EVENT_FILE="events/${EVENT}.toml"
+
+if [[ ! -e "$EVENT_FILE" ]]; then
+    info "Creating $EVENT_FILE"
+
+    cat >"$EVENT_FILE" <<EOF
+schema_version = 1
+
+id = "$EVENT"
+title = ""
+description = ""
+started_at = ""
+ended_at = ""
+
+# BEGIN GENERATED CONTENT
+[content]
+challenges = []
+gameboxes = []
+# END GENERATED CONTENT
+EOF
+else
+    info "Keeping existing $EVENT_FILE"
+fi
+
+# -----------------------------------------------------------------------------
+# Remotes
+# -----------------------------------------------------------------------------
+
+if git remote get-url upstream >/dev/null 2>&1; then
+    info "Keeping existing upstream"
+elif git remote get-url origin >/dev/null 2>&1; then
+    info "Renaming origin -> upstream"
+    git remote rename origin upstream
+else
+    die "no origin or upstream remote found"
+fi
+
+if git remote get-url origin >/dev/null 2>&1; then
+    info "Setting origin -> $PRIVATE_REPO_URL"
+    git remote set-url origin "$PRIVATE_REPO_URL"
+else
+    info "Adding origin -> $PRIVATE_REPO_URL"
+    git remote add origin "$PRIVATE_REPO_URL"
+fi
 
 echo
-echo "Event initialized: $EVENT"
+echo "Initialized event: $EVENT"
 echo
-echo "Branch:"
-git branch --show-current
+echo "Manifest:"
+echo "  $EVENT_FILE"
 echo
 echo "Remotes:"
 git remote -v
+echo
+echo "Next:"
+echo "  git add ."
+echo "  git commit -m \"chore: initialize event\""
+echo "  git push -u origin main"
