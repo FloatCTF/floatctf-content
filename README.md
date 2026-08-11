@@ -13,7 +13,7 @@ git@github.com:fb0sh/freshcup-2027.git
 ## 2. 克隆模板
 
 ```bash
-git clone -b event/base --depth 1 --single-branch \
+git clone -b event/base --single-branch --filter=blob:none \
   git@github.com:FloatCTF/floatctf-content.git \
   freshcup-2027
 
