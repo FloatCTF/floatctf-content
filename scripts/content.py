@@ -880,19 +880,30 @@ def render_catalog(catalog: dict[str, Any]) -> str:
 # ---------------------------------------------------------------------------
 
 
-def content_paths(names: Iterable[str]) -> list[str]:
-    """Map changed file paths to content directories (unique, sorted)."""
+def changed_image_paths(names: Iterable[str]) -> list[str]:
+    """Map changed file paths to the content directories that need a build.
+
+    Only ``<kind>/<id>/meta.toml`` and ``<kind>/<id>/src/**`` count.
+    README.md, ``attachment/**``, ``solution/**``, ``docs/**``, ``events/**``
+    and everything else never trigger an image build.
+    """
 
     found: set[str] = set()
 
     for name in names:
         parts = Path(name).parts
 
-        if len(parts) < 2:
+        if len(parts) < 3 or parts[0] not in CONTENT_DIRS.values():
             continue
 
-        if parts[0] in CONTENT_DIRS.values() and parts[1]:
-            found.add(f"{parts[0]}/{parts[1]}")
+        kind, content_id = parts[0], parts[1]
+        rest = parts[2:]
+
+        if not content_id:
+            continue
+
+        if rest == ("meta.toml",) or rest[0] == SOURCE_SUBDIR:
+            found.add(f"{kind}/{content_id}")
 
     return sorted(found)
 
@@ -938,7 +949,11 @@ def find_changed(
     all_content: bool = False,
     dockerfile_only: bool = False,
 ) -> list[str]:
-    """Return content directories touched between *base* and *head*."""
+    """Return content directories needing a build between *base* and *head*.
+
+    ``--all`` lists every content directory; otherwise only ``meta.toml`` and
+    ``src/**`` changes count (see :func:`changed_image_paths`).
+    """
 
     if all_content:
         paths = _all_content_paths(root)
@@ -952,7 +967,7 @@ def find_changed(
         else:
             paths = [
                 path
-                for path in content_paths(_git_diff_names(root, base, head))
+                for path in changed_image_paths(_git_diff_names(root, base, head))
                 if (root / path).is_dir()
             ]
 

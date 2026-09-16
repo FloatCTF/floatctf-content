@@ -967,42 +967,50 @@ class LabelTests(unittest.TestCase):
 
 
 class ChangedTests(unittest.TestCase):
-    def test_content_paths_filters_sorts_and_dedupes(self) -> None:
-        names = [
-            "challenges/comment/src/index.php",
+    def test_changed_image_paths_only_meta_and_src(self) -> None:
+        triggering = [
             "challenges/comment/meta.toml",
-            "challenges/comment/README.md",
+            "challenges/comment/src/index.php",
+            "challenges/comment/src/Dockerfile",
             "gameboxes/foo/meta.toml",
+            "gameboxes/foo/src/entrypoint.sh",
+        ]
+        ignored = [
+            "challenges/comment/README.md",
+            "challenges/comment/attachment/payload.zip",
+            "challenges/comment/solution/writeup.md",
+            "challenges/comment/exp.py",
+            "docs/comment.md",
             "events/freshcup.toml",
             "scripts/content.py",
             "scripts/tests/fixtures/valid/challenges/comment/meta.toml",
-            "docs/freshcup.md",
             "README.md",
             "catalog.json",
         ]
 
         self.assertEqual(
-            content.content_paths(names),
+            content.changed_image_paths(triggering + ignored),
             ["challenges/comment", "gameboxes/foo"],
         )
+        self.assertEqual(content.changed_image_paths(ignored), [])
 
-    def test_content_paths_handles_spaces_and_quotes(self) -> None:
+    def test_changed_image_paths_handles_spaces_and_quotes(self) -> None:
         names = [
             "challenges/Cirno's perfect math class/src/Dockerfile",
             "challenges/Cirno's perfect math class/meta.toml",
         ]
 
         self.assertEqual(
-            content.content_paths(names),
+            content.changed_image_paths(names),
             ["challenges/Cirno's perfect math class"],
         )
 
-    def test_content_paths_ignores_non_content(self) -> None:
+    def test_changed_image_paths_ignores_non_content(self) -> None:
         self.assertEqual(
-            content.content_paths(
+            content.changed_image_paths(
                 ["events/a.toml", "challenges", "challenges/", "gameboxes/x"]
             ),
-            ["gameboxes/x"],
+            [],
         )
 
     def test_find_changed_requires_revisions(self) -> None:
@@ -1075,16 +1083,43 @@ class ChangedGitTests(unittest.TestCase):
         self._git("add", "-A")
         self._git("commit", "-q", "-m", message)
 
-    def test_diff_detects_src_changes_only(self) -> None:
+    def test_diff_detects_src_and_meta_changes_only(self) -> None:
+        # The second commit also touched gameboxes/box/README.md and an event:
+        # neither may schedule an image build.
         self.assertEqual(
             content.find_changed(self.root, self.base, self.head),
-            ["challenges/comment", "gameboxes/box"],
+            ["challenges/comment"],
         )
         self.assertEqual(
             content.find_changed(
                 self.root, self.base, self.head, dockerfile_only=True
             ),
             ["challenges/comment"],
+        )
+
+    def test_meta_only_change_triggers_build(self) -> None:
+        self.write("gameboxes/box/meta.toml", 'name = "box"\nversion = "1.0.1"\n')
+        self.commit("meta")
+        head = self.rev("HEAD")
+
+        self.assertEqual(
+            content.find_changed(self.root, self.head, head),
+            ["gameboxes/box"],
+        )
+
+    def test_readme_attachment_and_solution_do_not_trigger_builds(self) -> None:
+        self.write("challenges/comment/README.md", "docs\n")
+        self.write("challenges/comment/attachment/payload.zip", "binary\n")
+        self.write("challenges/comment/solution/writeup.md", "solution\n")
+        self.commit("docs")
+        head = self.rev("HEAD")
+
+        self.assertEqual(content.find_changed(self.root, self.head, head), [])
+        self.assertEqual(
+            content.find_changed(
+                self.root, self.head, head, dockerfile_only=True
+            ),
+            [],
         )
 
     def test_events_and_scripts_do_not_trigger_builds(self) -> None:

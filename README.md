@@ -253,9 +253,20 @@ Dockerfile 固定为 `{context}/Dockerfile`，不支持自定义 context。
 **只有存在 `src/Dockerfile` 的内容才有镜像**；附件题（static / attachment-only）
 不会构建镜像，Catalog 中也不会出现 `image` 字段。
 
-已发布的 tag 是**不可覆盖**的：`main` 发布前会检查
-`floatctf/{safe_name}:{type}-v{version}` 是否已存在，已存在则直接失败并
-要求先 bump `version`。
+`version` 参与 tag 命名。同一个 tag 可以被重新构建并覆盖，例如
+`floatctf/comment:challenge-v1.0.0` 再次发布会用新构建的镜像替换它。
+
+只有以下变化会触发镜像构建：
+
+```text
+challenges/<id>/meta.toml
+challenges/<id>/src/**
+gameboxes/<id>/meta.toml
+gameboxes/<id>/src/**
+```
+
+`README.md`、`attachment/**`、`solution/**`、`docs/**`、`events/**` 等变化
+不会触发镜像构建。
 
 本地查看某个内容的镜像信息（镜像名、构建上下文、Labels）：
 
@@ -295,7 +306,7 @@ Event private repo
   └─ ./scripts/sync-event.sh     # validate + 更新 event manifest / docs
   └─ ./scripts/publish.sh        # 推送到 upstream event/<event-id> 并创建 PR
         └─ Pull Request          # validate + unittest + catalog 生成测试 + docker build（不 push）
-              └─ main            # 检查 tag 未占用 → 构建并推送镜像到 Docker Hub
+              └─ main            # 构建并推送镜像到 Docker Hub
                     └─ catalog.json   # 自动重新生成并提交
                           └─ FloatCTF 平台读取 raw catalog.json
 ```
@@ -304,18 +315,6 @@ Event private repo
   `catalog.json`。
 - Pull Request 与非 `main` 分支的手动触发只做 validate / 测试 / `docker build`，
   不登录 Docker Hub、不 push、不提交。
-
-### 版本策略
-
-只要需要重新发布镜像（修改了 `src/**`，或需要刷新镜像 metadata），
-就必须 bump `version`：
-
-```text
-1.0.0 → 1.0.1
-```
-
-已存在的 `floatctf/comment:challenge-v1.0.0` 不会被覆盖，
-Action 会失败并提示 bump version。
 
 GitHub Actions 需要配置的 Secrets（仅 `main` 使用，PR 不会接触）：
 
@@ -329,6 +328,6 @@ DOCKERHUB_TOKEN
 - `build_all = false`：只执行 validate、unittest 与 catalog 生成测试；
   在 `main` 上还会刷新 `catalog.json`。
 - `build_all = true`：构建所有带 Dockerfile 的 Challenge / GameBox；
-  在 `main` 上会检查 tag 并 push，在其他分支只 build。
+  在 `main` 上会 push，在其他分支只 build。
 
 

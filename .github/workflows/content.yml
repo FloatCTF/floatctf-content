@@ -150,23 +150,6 @@ jobs:
           python3 scripts/content.py image-meta "${{ matrix.path }}" \
             --github-output "$GITHUB_OUTPUT"
 
-      # Released tags are immutable: an existing tag means the version must be
-      # bumped in meta.toml instead of overwriting a published image.
-      - name: Check image tag is not published yet
-        if: env.PUBLISH == 'true'
-        env:
-          IMAGE: ${{ steps.image.outputs.image }}
-        run: |
-          set -euo pipefail
-
-          if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
-            echo "error: image already exists: $IMAGE" >&2
-            echo "bump version in meta.toml before publishing" >&2
-            exit 1
-          fi
-
-          echo "tag is free: $IMAGE"
-
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
