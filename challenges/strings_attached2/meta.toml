@@ -2,6 +2,8 @@ name = "strings_attached2"
 version = "1.0.0"
 author = "ablklice@gmail.com"
 category = "reverse"
+difficulty = "unknown"
+tags = []
 description = "和某一道题加密算法一样，但好像又有一些不同"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

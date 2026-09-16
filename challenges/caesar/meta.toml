@@ -2,6 +2,8 @@ name = "caesar"
 version = "1.0.0"
 author = "myx2727461997@gmail.com"
 category = "crypto"
+difficulty = "unknown"
+tags = []
 description = """
 凯撒大帝的秘密信息！
 

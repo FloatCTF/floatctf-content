@@ -1,0 +1,6 @@
+name = "broken"
+version = "1.0.0"
+author = "dev@floatctf.local"
+category = "web"
+tags = []
+description = "missing difficulty"

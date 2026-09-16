@@ -2,6 +2,8 @@ name = "ai_shell"
 version = "1.0.0"
 author = "fb0sh@outlook.com"
 category = "ai"
+difficulty = "unknown"
+tags = []
 description = "这个执行命令小模型，会听你的话吗？"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

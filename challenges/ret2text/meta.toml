@@ -2,6 +2,8 @@ name = "ret2text"
 version = "1.0.0"
 author = "fb0sh@outlook.com"
 category = "pwn"
+difficulty = "unknown"
+tags = []
 description = "return to text segment"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

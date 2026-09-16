@@ -23,6 +23,24 @@ DOC_FILE="docs/${EVENT}.md"
 command -v python3 >/dev/null 2>&1 ||
     die "python3 is required"
 
+# -----------------------------------------------------------------------------
+# Metadata validation
+# -----------------------------------------------------------------------------
+
+# scripts/content.py is the single source of truth for metadata validation.
+# Event repositories created from an older event/base branch may not have it
+# yet; in that case fall back to the checks further down.
+if [[ -f scripts/content.py ]]; then
+    echo "==> Validating content metadata"
+    python3 scripts/content.py validate
+else
+    echo "warning: scripts/content.py not found; skipping metadata validation" >&2
+fi
+
+# -----------------------------------------------------------------------------
+# Event manifest and documentation
+# -----------------------------------------------------------------------------
+
 python3 - "$EVENT" "$EVENT_FILE" "$DOC_FILE" <<'PY'
 from __future__ import annotations
 

@@ -2,6 +2,8 @@ name = "matrix_rsa"
 version = "1.0.0"
 author = "myx2727461997@gmail.com"
 category = "crypto"
+difficulty = "unknown"
+tags = []
 description = "你告诉我什么叫矩阵RSA？"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

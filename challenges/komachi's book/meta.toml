@@ -2,6 +2,8 @@ name = "komachi's book"
 version = "1.0.0"
 author = "hakureiyukari01@gmail.com"
 category = "misc"
+difficulty = "unknown"
+tags = []
 description = "小町摸鱼时会写小说,她可能会将小说变成zip包来存储"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

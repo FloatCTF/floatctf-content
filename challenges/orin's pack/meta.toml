@@ -2,6 +2,8 @@ name = "orin's pack"
 version = "1.0.0"
 author = "hakureiyukari01@gmail.com"
 category = "misc"
+difficulty = "unknown"
+tags = []
 description = "阿燐在她的猫车中找到一个神秘压缩包"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）
