@@ -2,6 +2,8 @@ name = "png"
 version = "1.0.0"
 author = "fb0sh@outlook.com"
 category = "misc"
+difficulty = "unknown"
+tags = []
 description = "图片里面有什么"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

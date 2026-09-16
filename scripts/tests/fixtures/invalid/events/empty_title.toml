@@ -1,0 +1,11 @@
+schema_version = 1
+
+id = "empty_title"
+title = "   "
+description = "title is blank"
+started_at = "2027-10-19 14:30"
+ended_at = "2027-10-19 18:30"
+
+[content]
+challenges = []
+gameboxes = []

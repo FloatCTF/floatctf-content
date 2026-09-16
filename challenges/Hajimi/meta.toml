@@ -2,6 +2,8 @@ name = "Hajimi"
 version = "1.0.0"
 author = "myx2727461997@gmail.com"
 category = "pwn"
+difficulty = "unknown"
+tags = []
 description = "我是耄耋，我还活着，拿nc拯救我吧，哈！！！"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

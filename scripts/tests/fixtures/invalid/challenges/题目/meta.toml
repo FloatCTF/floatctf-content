@@ -1,0 +1,7 @@
+name = "题目"
+version = "1.0.0"
+author = "dev@floatctf.local"
+category = "web"
+difficulty = "easy"
+tags = []
+description = "Unicode id without an explicit safe_name cannot be derived"

@@ -2,6 +2,8 @@ name = "learn_http"
 version = "1.0.0"
 author = "fb0sh@outlook.com"
 category = "web"
+difficulty = "unknown"
+tags = []
 description = "HTTP Protocol"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

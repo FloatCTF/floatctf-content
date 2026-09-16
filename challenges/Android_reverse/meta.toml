@@ -2,6 +2,8 @@ name = "Android_reverse"
 version = "1.0.0"
 author = "ablklice@gmail.com"
 category = "reverse"
+difficulty = "unknown"
+tags = []
 description = "简单的android逆向"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

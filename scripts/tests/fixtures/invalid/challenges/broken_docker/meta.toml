@@ -1,0 +1,14 @@
+name = "broken"
+version = "1.0.0"
+author = "dev@floatctf.local"
+category = "web"
+difficulty = "easy"
+tags = "php"
+description = "invalid tags"
+
+[docker]
+port = 70000
+
+[docker.recommended_resources]
+cpu_millis = 0
+pids_limit = -1

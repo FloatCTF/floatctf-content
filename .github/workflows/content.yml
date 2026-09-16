@@ -1,0 +1,88 @@
+name: content
+
+# Validate content metadata and keep catalog.json up to date.
+#
+# This repository only owns metadata and the generated catalog. The workflow
+# never builds, publishes or verifies Docker images: it never logs in to a
+# registry and needs no secrets.
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: content-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Validate content metadata
+        run: python3 scripts/content.py validate
+
+      # Catalog generation must succeed, but the committed catalog.json is
+      # refreshed by the catalog job on main only: pull requests are not
+      # required to keep it up to date.
+      - name: Check catalog can be generated
+        run: |
+          python3 scripts/content.py catalog --output /tmp/floatctf-catalog.json
+          test -s /tmp/floatctf-catalog.json
+
+      - name: Run unit tests
+        run: python3 -m unittest discover -s scripts/tests -v
+
+  catalog:
+    name: Update catalog.json
+    needs: validate
+    if: |
+      github.ref == 'refs/heads/main'
+      && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Regenerate catalog.json
+        run: python3 scripts/content.py catalog
+
+      - name: Commit catalog.json
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$(git status --porcelain -- catalog.json)" ]]; then
+            echo "catalog.json is already up to date"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add catalog.json
+          git commit -m "chore: update catalog [skip ci]"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

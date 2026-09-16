@@ -1,0 +1,11 @@
+schema_version = 1
+
+id = "wrong_type"
+title = 123
+description = "title is not a string"
+started_at = 20271019
+ended_at = "2027-10-19 18:30"
+
+[content]
+challenges = []
+gameboxes = []

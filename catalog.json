@@ -1,0 +1,605 @@
+{
+  "version": 1,
+  "challenges": [
+    {
+      "id": "Android_reverse",
+      "name": "Android_reverse",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "reverse",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "简单的android逆向",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "Cirno's perfect math class",
+      "name": "Cirno's perfect math class",
+      "version": "1.0.0",
+      "author": "hakureiyukari01@gmail.com",
+      "category": "misc",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "琪露诺发现幻想乡巴士里有base编码",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "Flag_in_the_model",
+      "name": "Flag_in_the_model",
+      "version": "1.0.0",
+      "author": "myx2727461997@gmail.com",
+      "category": "misc",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": ".pt？这是什么后缀名？",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "FloatCTF-qidong",
+      "name": "FloatCTF-qidong",
+      "version": "1.0.0",
+      "author": "myx2727461997@gmail.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "大喊FloatCTF启动来获得flag吧",
+      "image": "floatctf/floatctf-qidong:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "Hajimi",
+      "name": "Hajimi",
+      "version": "1.0.0",
+      "author": "myx2727461997@gmail.com",
+      "category": "pwn",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "我是耄耋，我还活着，拿nc拯救我吧，哈！！！",
+      "image": "floatctf/hajimi:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 1337,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "Smali",
+      "name": "Smali",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "reverse",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "smali后缀文件，何意味",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "ai_shell",
+      "name": "ai_shell",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "ai",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "这个执行命令小模型，会听你的话吗？",
+      "image": "floatctf/ai_shell:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "backdoor",
+      "name": "backdoor",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "php backdoor",
+      "image": "floatctf/backdoor:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "base64",
+      "name": "base64",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "crypto",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "ZmxhZ3tiMWQxZmNmNy01NzQyLTQ0OTctODYwOC1iZGU1NDlmMWQ1MmV9",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "caesar",
+      "name": "caesar",
+      "version": "1.0.0",
+      "author": "myx2727461997@gmail.com",
+      "category": "crypto",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "凯撒大帝的秘密信息！\n\n密文：iordwfwi{fdhvdu_flskhu_lv_hdvb}\n\n提示1：这是最古老的加密方法之一\n提示2：凯撒密码的位移量通常在 1-25 之间\n提示3：试试往回移动 3 位\n",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "comment",
+      "name": "comment",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "web",
+      "difficulty": "easy",
+      "tags": [
+        "php",
+        "web"
+      ],
+      "description": "注释里面有什么？",
+      "image": "floatctf/comment:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "cookie",
+      "name": "cookie",
+      "version": "1.0.0",
+      "author": "myx2727461997@gmail.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "想成为管理员吗？也许你需要一个特殊的饼干！",
+      "image": "floatctf/cookie:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "ctf_start",
+      "name": "ctf_start",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "misc",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "这图片好像缺点什么",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "dir_enum",
+      "name": "dir_enum",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "想必你一定知道什么是目录扫描吧",
+      "image": "floatctf/dir_enum:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "easy_reverse",
+      "name": "easy_reverse",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "reverse",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "使用tea算法进行解密,答案使用flag{}进行包裹",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "frontend_bypass",
+      "name": "frontend_bypass",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "前端绕过",
+      "image": "floatctf/frontend_bypass:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "komachi's book",
+      "name": "komachi's book",
+      "version": "1.0.0",
+      "author": "hakureiyukari01@gmail.com",
+      "category": "misc",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "小町摸鱼时会写小说,她可能会将小说变成zip包来存储",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "learn_http",
+      "name": "learn_http",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "HTTP Protocol",
+      "image": "floatctf/learn_http:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "matrix_rsa",
+      "name": "matrix_rsa",
+      "version": "1.0.0",
+      "author": "myx2727461997@gmail.com",
+      "category": "crypto",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "你告诉我什么叫矩阵RSA？",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "miku_flag",
+      "name": "miku_flag",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "misc",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "这图片好像缺点什么",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "orin's pack",
+      "name": "orin's pack",
+      "version": "1.0.0",
+      "author": "hakureiyukari01@gmail.com",
+      "category": "misc",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "阿燐在她的猫车中找到一个神秘压缩包",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "php_file",
+      "name": "php_file",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "file伪协议",
+      "image": "floatctf/php_file:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "png",
+      "name": "png",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "misc",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "图片里面有什么",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "ret2text",
+      "name": "ret2text",
+      "version": "1.0.0",
+      "author": "fb0sh@outlook.com",
+      "category": "pwn",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "return to text segment",
+      "image": "floatctf/ret2text:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 1337,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "robots",
+      "name": "robots",
+      "version": "1.0.0",
+      "author": "myx2727461997@gmail.com",
+      "category": "web",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "听说搜索引擎的爬虫都会先看 robots.txt 文件？",
+      "image": "floatctf/robots:challenge-v1.0.0",
+      "flag": {
+        "type": "dynamic"
+      },
+      "docker": {
+        "port": 80,
+        "recommended_resources": {
+          "cpu_millis": 500,
+          "memory_bytes": 268435456,
+          "pids_limit": 100
+        }
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "strings_attached1",
+      "name": "strings_attached1",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "reverse",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "找到了一串字符串，要用什么算法解密呢",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "strings_attached2",
+      "name": "strings_attached2",
+      "version": "1.0.0",
+      "author": "ablklice@gmail.com",
+      "category": "reverse",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "和某一道题加密算法一样，但好像又有一些不同",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    },
+    {
+      "id": "xzmu_anime_club",
+      "name": "xzmu_anime_club",
+      "version": "1.0.0",
+      "author": "hakureiyukari01@gmail.com",
+      "category": "crypto",
+      "difficulty": "unknown",
+      "tags": [],
+      "description": "这里是西藏民族大学动漫社，欢迎来玩",
+      "flag": {
+        "type": "static"
+      },
+      "events": [
+        "challenges-202510-freshcup"
+      ]
+    }
+  ],
+  "gameboxes": [],
+  "events": [
+    {
+      "id": "challenges-202510-freshcup",
+      "title": "2025 FloatCTF 新生赛",
+      "description": "2025 FloatCTF 新生赛题目仓库",
+      "started_at": "2025-10-19 14:30",
+      "ended_at": "2025-10-19 18:30",
+      "challenges": [
+        "Android_reverse",
+        "Cirno's perfect math class",
+        "Flag_in_the_model",
+        "FloatCTF-qidong",
+        "Hajimi",
+        "Smali",
+        "ai_shell",
+        "backdoor",
+        "base64",
+        "caesar",
+        "comment",
+        "cookie",
+        "ctf_start",
+        "dir_enum",
+        "easy_reverse",
+        "frontend_bypass",
+        "komachi's book",
+        "learn_http",
+        "matrix_rsa",
+        "miku_flag",
+        "orin's pack",
+        "php_file",
+        "png",
+        "ret2text",
+        "robots",
+        "strings_attached1",
+        "strings_attached2",
+        "xzmu_anime_club"
+      ],
+      "gameboxes": []
+    }
+  ]
+}

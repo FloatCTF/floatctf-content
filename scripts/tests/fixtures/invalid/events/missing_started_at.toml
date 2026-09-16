@@ -1,0 +1,10 @@
+schema_version = 1
+
+id = "missing_started_at"
+title = "Missing started_at"
+description = "started_at is absent"
+ended_at = "2027-10-19 18:30"
+
+[content]
+challenges = []
+gameboxes = []

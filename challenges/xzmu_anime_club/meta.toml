@@ -2,6 +2,8 @@ name = "xzmu_anime_club"
 version = "1.0.0"
 author = "hakureiyukari01@gmail.com"
 category = "crypto"
+difficulty = "unknown"
+tags = []
 description = "这里是西藏民族大学动漫社，欢迎来玩"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

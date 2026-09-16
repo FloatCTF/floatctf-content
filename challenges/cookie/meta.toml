@@ -2,6 +2,8 @@ name = "cookie"
 version = "1.0.0"
 author = "myx2727461997@gmail.com"
 category = "web"
+difficulty = "unknown"
+tags = []
 description = "想成为管理员吗？也许你需要一个特殊的饼干！"
 
 # Optional: 显式 safe_name；缺省由 name 派生（派生失败时必须显式提供）

@@ -1,0 +1,7 @@
+name = "broken"
+version = "1.0.0"
+author = "dev@floatctf.local"
+category = "web"
+difficulty = "impossible"
+tags = []
+description = "invalid difficulty"
