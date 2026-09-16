@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""FloatCTF content metadata, catalog and container image helper.
+"""FloatCTF content metadata and catalog helper.
 
 This module is the single source of truth for:
 
-* content ids, types and versions (``meta.toml``)
-* Docker image references and OCI / FloatCTF labels
+* content ids, types, versions and Docker safe names (``meta.toml``)
 * ``catalog.json``
-* changed content detection for CI
+
+It only validates metadata and generates the catalog. Building, publishing or
+verifying container images is explicitly out of scope: the ``image`` field is
+derived metadata for the FloatCTF platform to consume.
 
 Only the Python standard library (3.11+) is required.
 """
@@ -15,15 +17,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
-import subprocess
 import sys
 import tomllib
 import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, NoReturn, Sequence
+from typing import Any, NoReturn, Sequence
 
 # ---------------------------------------------------------------------------
 # Constants
@@ -44,10 +44,11 @@ CONTENT_DIRS: dict[str, str] = {
 CATALOG_FILE = "catalog.json"
 CATALOG_VERSION = 1
 
+#: Docker Hub namespace used when building the catalog image reference.
 IMAGE_NAMESPACE = "floatctf"
-IMAGE_VENDOR = "FloatCTF"
-IMAGE_SOURCE = "https://github.com/FloatCTF/floatctf-content"
 
+#: Content is considered container-based when ``<content>/src/Dockerfile``
+#: exists; only then does the catalog carry an ``image`` field.
 SOURCE_SUBDIR = "src"
 DOCKERFILE_NAME = "Dockerfile"
 
@@ -90,12 +91,6 @@ POSITIVE_RESOURCE_FIELDS: tuple[str, ...] = (
 
 PORT_MIN = 1
 PORT_MAX = 65535
-
-#: GitHub Actions output name used by ``changed --github-output``.
-GITHUB_PATHS_OUTPUT = "paths"
-
-#: Delimiter used for multi-line GitHub Actions outputs.
-GITHUB_OUTPUT_DELIMITER = "EOF"
 
 
 class ContentError(Exception):
@@ -140,16 +135,14 @@ def explicit_safe_name(meta: dict[str, Any]) -> str | None:
     return None
 
 
-def dockerfile_path(content: "Content", root: Path) -> Path:
-    """Return the Dockerfile path of *content* below *root*."""
-
-    return root / content.path / SOURCE_SUBDIR / DOCKERFILE_NAME
-
-
 def has_dockerfile(content: "Content", root: Path) -> bool:
-    """True when *content* is a container (``src/Dockerfile`` exists)."""
+    """True when *content* is a container (``src/Dockerfile`` exists).
 
-    return dockerfile_path(content, root).is_file()
+    Container content gets an ``image`` reference in the catalog; the
+    attachment-only content does not.
+    """
+
+    return (root / content.path / SOURCE_SUBDIR / DOCKERFILE_NAME).is_file()
 
 
 # ---------------------------------------------------------------------------
@@ -226,12 +219,6 @@ def _report(errors: list[str] | None, message: str) -> None:
     if errors is None:
         raise ContentError(message)
     errors.append(message)
-
-
-def _label_text(value: Any) -> str:
-    """Collapse whitespace so a value is safe for a Docker label."""
-
-    return " ".join(str(value).split())
 
 
 def _is_positive_int(value: Any) -> bool:
@@ -621,112 +608,6 @@ def image_ref(content: Content) -> str:
     )
 
 
-def image_context(content: Content) -> tuple[str, str]:
-    """Return the Docker build context and Dockerfile paths, relative to root."""
-
-    context = content.path / SOURCE_SUBDIR
-    dockerfile = context / DOCKERFILE_NAME
-
-    return context.as_posix(), dockerfile.as_posix()
-
-
-def ensure_dockerfile(content: Content, root: Path) -> str:
-    """Return the Dockerfile path or raise :class:`ContentError`."""
-
-    _, dockerfile = image_context(content)
-
-    if not (root / dockerfile).is_file():
-        raise ContentError(
-            f"{content.path.as_posix()}: Dockerfile not found: {dockerfile}"
-        )
-
-    return dockerfile
-
-
-def image_labels(content: Content, revision: str | None = None) -> dict[str, str]:
-    """Return the OCI / FloatCTF labels for *content*."""
-
-    meta = content.meta
-    tags = meta.get("tags")
-
-    if not isinstance(tags, list):
-        tags = []
-
-    labels = {
-        "org.opencontainers.image.title": _label_text(
-            meta.get("name", content.id)
-        ),
-        "org.opencontainers.image.description": _label_text(
-            meta.get("description", "")
-        ),
-        "org.opencontainers.image.version": _label_text(content.version),
-        "org.opencontainers.image.vendor": IMAGE_VENDOR,
-        "org.opencontainers.image.source": IMAGE_SOURCE,
-        "io.floatctf.type": content.type,
-        "io.floatctf.id": content.id,
-        "io.floatctf.category": _label_text(meta.get("category", "")),
-        "io.floatctf.difficulty": _label_text(meta.get("difficulty", "")),
-        "io.floatctf.version": _label_text(content.version),
-        "io.floatctf.tags": ",".join(_label_text(tag) for tag in tags),
-    }
-
-    revision = revision or os.environ.get("GITHUB_SHA") or ""
-
-    if revision.strip():
-        labels["org.opencontainers.image.revision"] = revision.strip()
-
-    return labels
-
-
-def load_content(root: Path, path: str) -> Content:
-    """Load one ``challenges/<id>`` or ``gameboxes/<id>`` directory."""
-
-    candidate = Path(path.strip().rstrip("/"))
-
-    if candidate.is_absolute():
-        try:
-            candidate = candidate.relative_to(root)
-        except ValueError:
-            raise ContentError(
-                f"{path}: must live inside the repository root"
-            ) from None
-
-    parts = candidate.parts
-
-    if len(parts) != 2 or parts[0] not in CONTENT_DIRS.values():
-        raise ContentError(
-            f"{path}: expected challenges/<id> or gameboxes/<id>"
-        )
-
-    content_type = (
-        CONTENT_CHALLENGE if parts[0] == CHALLENGES_DIR else CONTENT_GAMEBOX
-    )
-    directory = root / parts[0] / parts[1]
-    meta_path = directory / "meta.toml"
-
-    if not directory.is_dir():
-        raise ContentError(f"{path}: directory not found")
-
-    if not meta_path.is_file():
-        raise ContentError(f"{_display(meta_path, root)}: missing meta.toml")
-
-    content = Content(
-        id=parts[1],
-        type=content_type,
-        path=Path(parts[0]) / parts[1],
-        meta=load_meta(meta_path),
-    )
-
-    errors = validate_meta(content, root)
-
-    if errors:
-        raise ContentError(errors[0])
-
-    ensure_dockerfile(content, root)
-
-    return content
-
-
 # ---------------------------------------------------------------------------
 # Catalog
 # ---------------------------------------------------------------------------
@@ -876,137 +757,6 @@ def render_catalog(catalog: dict[str, Any]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Changed content detection
-# ---------------------------------------------------------------------------
-
-
-def changed_image_paths(names: Iterable[str]) -> list[str]:
-    """Map changed file paths to the content directories that need a build.
-
-    Only ``<kind>/<id>/meta.toml`` and ``<kind>/<id>/src/**`` count.
-    README.md, ``attachment/**``, ``solution/**``, ``docs/**``, ``events/**``
-    and everything else never trigger an image build.
-    """
-
-    found: set[str] = set()
-
-    for name in names:
-        parts = Path(name).parts
-
-        if len(parts) < 3 or parts[0] not in CONTENT_DIRS.values():
-            continue
-
-        kind, content_id = parts[0], parts[1]
-        rest = parts[2:]
-
-        if not content_id:
-            continue
-
-        if rest == ("meta.toml",) or rest[0] == SOURCE_SUBDIR:
-            found.add(f"{kind}/{content_id}")
-
-    return sorted(found)
-
-
-def _git_diff_names(root: Path, base: str, head: str) -> list[str]:
-    result = subprocess.run(
-        ["git", "-C", str(root), "diff", "--name-only", "-z", base, head],
-        capture_output=True,
-        check=False,
-    )
-
-    if result.returncode != 0:
-        message = result.stderr.decode("utf-8", errors="replace").strip()
-        raise ContentError(
-            f"git diff {base} {head} failed"
-            + (f": {message}" if message else "")
-        )
-
-    output = result.stdout.decode("utf-8", errors="replace")
-
-    return [name for name in output.split("\0") if name]
-
-
-def _all_content_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-
-    for content_type in CONTENT_DIRS:
-        for content in scan_contents(root, content_type):
-            paths.append(f"{CONTENT_DIRS[content_type]}/{content.id}")
-
-    return sorted(set(paths))
-
-
-def _is_zero_sha(value: str) -> bool:
-    return bool(value) and set(value) <= {"0"}
-
-
-def find_changed(
-    root: Path,
-    base: str | None = None,
-    head: str | None = None,
-    *,
-    all_content: bool = False,
-    dockerfile_only: bool = False,
-) -> list[str]:
-    """Return content directories needing a build between *base* and *head*.
-
-    ``--all`` lists every content directory; otherwise only ``meta.toml`` and
-    ``src/**`` changes count (see :func:`changed_image_paths`).
-    """
-
-    if all_content:
-        paths = _all_content_paths(root)
-    else:
-        if not base or not head:
-            raise ContentError("changed requires --base and --head, or --all")
-
-        if _is_zero_sha(base):
-            # First push of a branch: everything is new.
-            paths = _all_content_paths(root)
-        else:
-            paths = [
-                path
-                for path in changed_image_paths(_git_diff_names(root, base, head))
-                if (root / path).is_dir()
-            ]
-
-    if dockerfile_only:
-        paths = [
-            path
-            for path in paths
-            if (root / path / SOURCE_SUBDIR / DOCKERFILE_NAME).is_file()
-        ]
-
-    return sorted(set(paths))
-
-
-# ---------------------------------------------------------------------------
-# GitHub Actions output
-# ---------------------------------------------------------------------------
-
-
-def write_github_output(path: str, values: dict[str, str]) -> None:
-    """Append step outputs to a ``$GITHUB_OUTPUT`` file.
-
-    Multi-line values use the documented heredoc form so that e.g. the
-    ``labels`` output of ``image-meta`` can be fed to
-    ``docker/build-push-action`` unchanged.
-    """
-
-    with open(path, "a", encoding="utf-8") as handle:
-        for key, value in values.items():
-            if "\n" in value or "\r" in value:
-                handle.write(
-                    f"{key}<<{GITHUB_OUTPUT_DELIMITER}\n"
-                    f"{value}\n"
-                    f"{GITHUB_OUTPUT_DELIMITER}\n"
-                )
-            else:
-                handle.write(f"{key}={value}\n")
-
-
-# ---------------------------------------------------------------------------
 # Commands
 # ---------------------------------------------------------------------------
 
@@ -1070,72 +820,10 @@ def cmd_catalog(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_image_meta(args: argparse.Namespace) -> int:
-    root = Path(args.root)
-    content = load_content(root, args.path)
-    context, dockerfile = image_context(content)
-
-    meta = {
-        "id": content.id,
-        "type": content.type,
-        "version": content.version,
-        "image": image_ref(content),
-        "context": context,
-        "dockerfile": dockerfile,
-        "labels": image_labels(content, args.revision),
-    }
-
-    if args.github_output:
-        labels = "\n".join(
-            f"{key}={value}" for key, value in meta["labels"].items()
-        )
-        write_github_output(
-            args.github_output,
-            {
-                "id": meta["id"],
-                "type": meta["type"],
-                "version": meta["version"],
-                "image": meta["image"],
-                "context": meta["context"],
-                "dockerfile": meta["dockerfile"],
-                "labels": labels,
-            },
-        )
-
-    print(json.dumps(meta, indent=2, ensure_ascii=False))
-
-    return 0
-
-
-def cmd_changed(args: argparse.Namespace) -> int:
-    root = Path(args.root)
-    paths = find_changed(
-        root,
-        args.base,
-        args.head,
-        all_content=args.all,
-        dockerfile_only=args.dockerfile_only,
-    )
-
-    if args.github_output:
-        write_github_output(
-            args.github_output,
-            {
-                GITHUB_PATHS_OUTPUT: json.dumps(
-                    paths, ensure_ascii=False, separators=(",", ":")
-                )
-            },
-        )
-
-    print(json.dumps(paths, indent=2, ensure_ascii=False))
-
-    return 0
-
-
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="content.py",
-        description="FloatCTF content metadata, catalog and image helper.",
+        description="FloatCTF content metadata and catalog helper.",
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -1170,48 +858,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="write the catalog to FILE (default: <root>/catalog.json)",
     )
     catalog_parser.set_defaults(func=cmd_catalog)
-
-    image_parser = subparsers.add_parser(
-        "image-meta",
-        parents=[common],
-        help="print image metadata for one content directory",
-    )
-    image_parser.add_argument("path", help="challenges/<id> or gameboxes/<id>")
-    image_parser.add_argument(
-        "--github-output",
-        metavar="FILE",
-        help="also append step outputs to a GitHub Actions output file",
-    )
-    image_parser.add_argument(
-        "--revision",
-        help="value for org.opencontainers.image.revision "
-        "(default: $GITHUB_SHA)",
-    )
-    image_parser.set_defaults(func=cmd_image_meta)
-
-    changed_parser = subparsers.add_parser(
-        "changed",
-        parents=[common],
-        help="list content directories changed between two revisions",
-    )
-    changed_parser.add_argument("--base", help="base git revision")
-    changed_parser.add_argument("--head", help="head git revision")
-    changed_parser.add_argument(
-        "--all",
-        action="store_true",
-        help="list every content directory instead of diffing",
-    )
-    changed_parser.add_argument(
-        "--dockerfile-only",
-        action="store_true",
-        help="only list content that has a Dockerfile",
-    )
-    changed_parser.add_argument(
-        "--github-output",
-        metavar="FILE",
-        help="also append step outputs to a GitHub Actions output file",
-    )
-    changed_parser.set_defaults(func=cmd_changed)
 
     return parser
 

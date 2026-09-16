@@ -115,10 +115,19 @@ floatctf-content:main
 
 ## Content Metadata
 
-`meta.toml` 是 Challenge / GameBox 的唯一元数据来源，同时用于：
+`meta.toml` 是 Challenge / GameBox 的唯一元数据来源，用于生成 `catalog.json`。
 
-- `catalog.json`
-- Docker Image 的 OCI / FloatCTF Labels
+```text
+meta.toml
+    ↓
+scripts/content.py
+    ↓
+catalog.json
+    ↓
+FloatCTF Platform
+```
+
+本仓库只负责元数据校验与 Catalog 生成，**不负责构建、发布或验证镜像**。
 
 三个概念要区分清楚：
 
@@ -126,10 +135,10 @@ floatctf-content:main
 |------|------|------|
 | `id` | 目录名 | FloatCTF 内部稳定 ID，Event 引用、catalog 中的 `id` |
 | `name` | `meta.toml` | UI 显示名称 |
-| `safe_name` | `meta.toml`（可选） | Docker repository 名（`floatctf/{safe_name}`） |
+| `safe_name` | `meta.toml`（可选） | Docker repository 名，用于 catalog 中的 image 引用 |
 
 `id` 不需要在 `meta.toml` 中声明，Challenge 与 GameBox 允许使用相同 `id`
-与相同 `safe_name`，因为镜像 tag（`challenge-v*` / `gamebox-v*`）不同。
+与相同 `safe_name`，因为 image tag（`challenge-v*` / `gamebox-v*`）不同。
 
 ```toml
 name = "comment"
@@ -231,9 +240,10 @@ error: challenges/题目/meta.toml: unable to derive Docker safe_name; set safe_
 python3 scripts/content.py validate
 ```
 
-## Official Images
+## Image Reference
 
-镜像名规则只在 `scripts/content.py` 中实现，不要在别处重新拼接：
+Catalog 中的 `image` 只是**规范化的引用**，由 `scripts/content.py` 生成，
+供 FloatCTF 平台使用。本仓库不构建、不推送、不验证该镜像：
 
 ```text
 Challenge: floatctf/{safe_name}:challenge-v{version}
@@ -247,32 +257,15 @@ floatctf/comment:challenge-v1.0.0
 floatctf/cirnos-perfect-math-class:challenge-v1.0.0
 ```
 
-构建上下文固定为 `challenges/{id}/src`（GameBox 为 `gameboxes/{id}/src`），
-Dockerfile 固定为 `{context}/Dockerfile`，不支持自定义 context。
-
-**只有存在 `src/Dockerfile` 的内容才有镜像**；附件题（static / attachment-only）
-不会构建镜像，Catalog 中也不会出现 `image` 字段。
-
-`version` 参与 tag 命名。同一个 tag 可以被重新构建并覆盖，例如
-`floatctf/comment:challenge-v1.0.0` 再次发布会用新构建的镜像替换它。
-
-只有以下变化会触发镜像构建：
+**只有存在 `src/Dockerfile` 的内容才有 `image`**：
 
 ```text
-challenges/<id>/meta.toml
-challenges/<id>/src/**
-gameboxes/<id>/meta.toml
-gameboxes/<id>/src/**
+challenges/<id>/src/Dockerfile 存在  → Catalog 包含 image
+不存在（附件题 static / attachment） → 仍然进入 Catalog，只是没有 image
 ```
 
-`README.md`、`attachment/**`、`solution/**`、`docs/**`、`events/**` 等变化
-不会触发镜像构建。
-
-本地查看某个内容的镜像信息（镜像名、构建上下文、Labels）：
-
-```bash
-python3 scripts/content.py image-meta challenges/comment
-```
+不检查 Docker Hub 是否已有该镜像、本地是否能构建、tag 是否存在，也不做
+pull / push。
 
 ## Catalog
 
@@ -305,29 +298,18 @@ Catalog 只包含元数据，不包含 flag 值；只有带 `src/Dockerfile` 的
 Event private repo
   └─ ./scripts/sync-event.sh     # validate + 更新 event manifest / docs
   └─ ./scripts/publish.sh        # 推送到 upstream event/<event-id> 并创建 PR
-        └─ Pull Request          # validate + unittest + catalog 生成测试 + docker build（不 push）
-              └─ main            # 构建并推送镜像到 Docker Hub
-                    └─ catalog.json   # 自动重新生成并提交
+        └─ Pull Request          # validate + catalog 生成测试 + unittest
+              └─ main            # validate + unittest + 重新生成 catalog.json
+                    └─ catalog.json   # 有变化时由 github-actions[bot] 自动提交
                           └─ FloatCTF 平台读取 raw catalog.json
 ```
 
-- 只有 `refs/heads/main` 上的 `push` / `workflow_dispatch` 会 push 镜像与提交
-  `catalog.json`。
-- Pull Request 与非 `main` 分支的手动触发只做 validate / 测试 / `docker build`，
-  不登录 Docker Hub、不 push、不提交。
-
-GitHub Actions 需要配置的 Secrets（仅 `main` 使用，PR 不会接触）：
-
-```text
-DOCKERHUB_USERNAME
-DOCKERHUB_TOKEN
-```
-
-手动触发（`workflow_dispatch`）：
-
-- `build_all = false`：只执行 validate、unittest 与 catalog 生成测试；
-  在 `main` 上还会刷新 `catalog.json`。
-- `build_all = true`：构建所有带 Dockerfile 的 Challenge / GameBox；
-  在 `main` 上会 push，在其他分支只 build。
+- Pull Request：`validate` → `catalog --output`（不修改工作树）→ unittest。
+  不要求 `catalog.json` 已经是最新。
+- `main`（push 或 `workflow_dispatch`）：`validate` + unittest 通过后重新生成
+  `catalog.json`，有变化时用 `github-actions[bot]` 提交
+  `chore: update catalog [skip ci]`。
+- 只有 `main` 会提交 catalog；PR 与其他分支不会。
+- Action 不登录任何 Registry、不构建镜像、不需要任何 Secret。
 
 
