@@ -15,10 +15,13 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -521,6 +524,57 @@ class ValidateTests(unittest.TestCase):
         self.assertIn("events/dup.toml: duplicate challenge 'broken_version'", errors)
         self.assertIn("events/dup.toml: duplicate gamebox 'box'", errors)
 
+    def test_event_missing_title(self) -> None:
+        self.assertIn(
+            "events/missing_title.toml: missing field 'title'",
+            self.errors(INVALID_FIXTURE),
+        )
+
+    def test_event_empty_title(self) -> None:
+        self.assertIn(
+            "events/empty_title.toml: field 'title' must be a non-empty string",
+            self.errors(INVALID_FIXTURE),
+        )
+
+    def test_event_missing_description(self) -> None:
+        self.assertIn(
+            "events/missing_description.toml: missing field 'description'",
+            self.errors(INVALID_FIXTURE),
+        )
+
+    def test_event_missing_started_at(self) -> None:
+        self.assertIn(
+            "events/missing_started_at.toml: missing field 'started_at'",
+            self.errors(INVALID_FIXTURE),
+        )
+
+    def test_event_missing_ended_at(self) -> None:
+        self.assertIn(
+            "events/missing_ended_at.toml: missing field 'ended_at'",
+            self.errors(INVALID_FIXTURE),
+        )
+
+    def test_event_fields_must_be_strings(self) -> None:
+        errors = self.errors(INVALID_FIXTURE)
+
+        self.assertIn(
+            "events/wrong_type.toml: field 'title' must be a non-empty string",
+            errors,
+        )
+        self.assertIn(
+            "events/wrong_type.toml: field 'started_at' must be a non-empty string",
+            errors,
+        )
+
+    def test_valid_event(self) -> None:
+        result = content.validate(VALID_FIXTURE)
+        event = result.events[0]
+
+        self.assertTrue(result.ok, result.errors)
+        self.assertEqual(event.id, "freshcup")
+        for name in content.EVENT_REQUIRED_TEXT_FIELDS:
+            self.assertTrue(str(event.meta[name]).strip(), name)
+
 
 # ---------------------------------------------------------------------------
 # 6 - 9. catalog
@@ -695,6 +749,11 @@ class CatalogTests(unittest.TestCase):
                 else:
                     self.assertFalse(dockerfile.is_file(), entry["id"])
 
+                self.assertFalse(
+                    "docker" in entry and "image" not in entry,
+                    f"{entry['id']} exposes docker without image",
+                )
+
     def test_catalog_keeps_raw_id_and_unicode_description(self) -> None:
         catalog = content.build_catalog(SAFE_NAMES_FIXTURE)
         rendered = content.render_catalog(catalog)
@@ -705,6 +764,37 @@ class CatalogTests(unittest.TestCase):
         )
         self.assertIn("题目", rendered)
         self.assertIn("Unicode id needs an explicit safe_name", rendered)
+
+    def test_static_content_omits_image_and_docker(self) -> None:
+        catalog = content.build_catalog(SAFE_NAMES_FIXTURE)
+        entry = find_entry(catalog["challenges"], "static_with_docker")
+
+        # The fixture really declares a [docker] table ...
+        declared = {
+            item.id: item
+            for item in content.scan_contents(
+                SAFE_NAMES_FIXTURE, content.CONTENT_CHALLENGE
+            )
+        }["static_with_docker"]
+        self.assertIn("docker", declared.meta)
+        self.assertFalse(
+            content.has_dockerfile(declared, SAFE_NAMES_FIXTURE)
+        )
+
+        # ... but static content exposes neither image nor docker.
+        self.assertNotIn("image", entry)
+        self.assertNotIn("docker", entry)
+
+    def test_container_content_keeps_image_and_docker(self) -> None:
+        entry = find_entry(
+            content.build_catalog(SAFE_NAMES_FIXTURE)["challenges"],
+            "FloatCTF-qidong",
+        )
+
+        self.assertEqual(
+            entry["image"], "floatctf/floatctf-qidong:challenge-v1.0.0"
+        )
+        self.assertEqual(entry["docker"]["port"], 80)
 
     def test_catalog_is_deterministic(self) -> None:
         first = content.render_catalog(content.build_catalog(VALID_FIXTURE))
@@ -793,3 +883,156 @@ class CatalogTests(unittest.TestCase):
             self.assertFalse((root / "catalog.json").exists())
 
 
+# ---------------------------------------------------------------------------
+# ./scripts/sync-event.sh integration
+# ---------------------------------------------------------------------------
+
+
+@unittest.skipUnless(shutil.which("git"), "git is required")
+class SyncEventScriptTests(unittest.TestCase):
+    """The event sync must not deadlock on stale event references.
+
+    ``sync-event.sh`` refreshes the generated ``[content]`` block from the
+    directories that exist and only validates afterwards, so deleting or
+    renaming a challenge/gamebox must succeed.
+    """
+
+    EVENT_ID = "freshcup-2027"
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name) / self.EVENT_ID
+        self.root.mkdir(parents=True)
+
+        scripts = self.root / "scripts"
+        scripts.mkdir()
+        for name in ("sync-event.sh", "content.py"):
+            shutil.copy2(SCRIPTS_DIR / name, scripts / name)
+
+        self.write_event(["a", "b"], ["box_a", "box_b"])
+        write_content(self.root, "challenges", "a")
+        write_content(self.root, "challenges", "b")
+        write_content(self.root, "gameboxes", "box_a")
+        write_content(self.root, "gameboxes", "box_b")
+
+        self.git("init", "-q")
+        self.commit()
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    # -- helpers ----------------------------------------------------------
+
+    def git(self, *args: str) -> str:
+        result = subprocess.run(
+            ["git", "-C", str(self.root), *args],
+            check=True,
+            capture_output=True,
+            text=True,
+            env={
+                **os.environ,
+                "GIT_AUTHOR_NAME": "test",
+                "GIT_AUTHOR_EMAIL": "test@example.com",
+                "GIT_COMMITTER_NAME": "test",
+                "GIT_COMMITTER_EMAIL": "test@example.com",
+            },
+        )
+        return result.stdout.strip()
+
+    def commit(self, message: str = "sync") -> None:
+        self.git("add", "-A")
+        self.git("commit", "-q", "-m", message)
+
+    def write_event(self, challenges: list[str], gameboxes: list[str]) -> None:
+        def array(name: str, values: list[str]) -> str:
+            lines = [f"{name} = ["]
+            lines += [f'    "{value}",' for value in values]
+            lines.append("]")
+            return "\n".join(lines)
+
+        events = self.root / "events"
+        events.mkdir(exist_ok=True)
+        (events / f"{self.EVENT_ID}.toml").write_text(
+            "schema_version = 1\n"
+            "\n"
+            f'id = "{self.EVENT_ID}"\n'
+            'title = "Freshcup 2027"\n'
+            'description = "integration fixture"\n'
+            'started_at = "2027-10-19 14:30"\n'
+            'ended_at = "2027-10-19 18:30"\n'
+            "\n"
+            "# BEGIN GENERATED CONTENT\n"
+            "[content]\n"
+            f"{array('challenges', challenges)}\n"
+            "\n"
+            f"{array('gameboxes', gameboxes)}\n"
+            "# END GENERATED CONTENT\n",
+            encoding="utf-8",
+        )
+
+    def sync(self) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            ["bash", "scripts/sync-event.sh"],
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+        )
+
+    def event_content(self) -> tuple[list[str], list[str]]:
+        with (self.root / "events" / f"{self.EVENT_ID}.toml").open("rb") as handle:
+            data = tomllib.load(handle)
+
+        return data["content"]["challenges"], data["content"]["gameboxes"]
+
+    # -- tests ------------------------------------------------------------
+
+    def test_delete_content_updates_event_then_validates(self) -> None:
+        self.assertEqual(self.sync().returncode, 0)
+        self.assertEqual(
+            self.event_content(), (["a", "b"], ["box_a", "box_b"])
+        )
+
+        shutil.rmtree(self.root / "challenges" / "b")
+        shutil.rmtree(self.root / "gameboxes" / "box_b")
+        self.commit("delete b")
+
+        result = self.sync()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("Validated content", result.stdout)
+        self.assertEqual(self.event_content(), (["a"], ["box_a"]))
+
+    def test_rename_content_updates_event_then_validates(self) -> None:
+        self.assertEqual(self.sync().returncode, 0)
+
+        (self.root / "challenges" / "b").rename(
+            self.root / "challenges" / "renamed"
+        )
+        (self.root / "gameboxes" / "box_b").rename(
+            self.root / "gameboxes" / "box_renamed"
+        )
+        self.commit("rename b")
+
+        result = self.sync()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            self.event_content(), (["a", "renamed"], ["box_a", "box_renamed"])
+        )
+
+    def test_event_is_synced_before_validation_fails(self) -> None:
+        write_content(self.root, "challenges", "c")
+        meta = self.root / "challenges" / "c" / "meta.toml"
+        meta.write_text(
+            meta.read_text(encoding="utf-8").replace(
+                'difficulty = "easy"', 'difficulty = "impossible"'
+            ),
+            encoding="utf-8",
+        )
+
+        result = self.sync()
+
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("invalid difficulty", result.stderr)
+        # the event was refreshed before the validation failure
+        self.assertEqual(self.event_content()[0], ["a", "b", "c"])

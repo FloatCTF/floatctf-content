@@ -75,11 +75,13 @@ meta.toml
 
 脚本会自动：
 
-- 校验 `meta.toml`（`scripts/content.py validate`）
 - 扫描 `challenges/`
 - 扫描 `gameboxes/`
-- 更新 `events/<event-id>.toml`
+- 更新 `events/<event-id>.toml` 的 `[content]`
 - 生成 `docs/<event-id>.md`
+- 最后校验 `meta.toml`（`scripts/content.py validate`）
+
+先同步再校验：删除或重命名内容时不会被 Event 中的旧引用卡住。
 
 然后正常提交：
 
@@ -240,6 +242,46 @@ error: challenges/题目/meta.toml: unable to derive Docker safe_name; set safe_
 python3 scripts/content.py validate
 ```
 
+## Event Metadata
+
+`events/*.toml` 里除了由脚本生成的 `[content]`，还必须包含：
+
+```text
+id  title  description  started_at  ended_at
+```
+
+```toml
+schema_version = 1
+
+id = "freshcup-2027"
+title = "2027 FloatCTF 新生赛"
+description = "2027 FloatCTF 新生赛题目仓库"
+started_at = "2027-10-19 14:30"
+ended_at = "2027-10-19 18:30"
+
+# BEGIN GENERATED CONTENT
+[content]
+challenges = []
+gameboxes = []
+# END GENERATED CONTENT
+```
+
+- `id` 必须等于文件名：`events/freshcup-2027.toml` → `id = "freshcup-2027"`。
+- `title` / `description` / `started_at` / `ended_at` 必须是 strip 后非空的字符串
+  （暂不校验日期格式）。
+- `[content]` 由 `./scripts/sync-event.sh` 自动生成，不要手工维护。
+
+`./scripts/sync-event.sh` 的执行顺序：
+
+```text
+扫描 Challenge / GameBox
+  → 更新 Event 的 [content] generated block
+  → 生成 docs/<event-id>.md
+  → 最后执行完整 metadata validation
+```
+
+先同步再校验，所以删除或重命名内容时不会被 Event 里的旧引用阻塞。
+
 ## Image Reference
 
 Catalog 中的 `image` 只是**规范化的引用**，由 `scripts/content.py` 生成，
@@ -257,11 +299,14 @@ floatctf/comment:challenge-v1.0.0
 floatctf/cirnos-perfect-math-class:challenge-v1.0.0
 ```
 
-**只有存在 `src/Dockerfile` 的内容才有 `image`**：
+`src/Dockerfile` 是否存在决定内容类型：
 
 ```text
-challenges/<id>/src/Dockerfile 存在  → Catalog 包含 image
-不存在（附件题 static / attachment） → 仍然进入 Catalog，只是没有 image
+存在            → container content
+                  Catalog 才可能包含 image 与 docker
+不存在          → static / attachment content
+                  仍然进入 Catalog，但既没有 image 也没有 docker
+                  （即使 meta.toml 中写了 [docker] 也不会输出）
 ```
 
 不检查 Docker Hub 是否已有该镜像、本地是否能构建、tag 是否存在，也不做
@@ -287,7 +332,7 @@ python3 scripts/content.py catalog --check               # 只检查是否最新
 > **catalog.json is generated. Do not edit it manually.**
 
 Catalog 只包含元数据，不包含 flag 值；只有带 `src/Dockerfile` 的内容才有
-`image` 字段。
+`image` 与 `docker` 字段。
 
 提交到 `main` 的原因：Git 历史可追踪、`raw.githubusercontent.com` 直接访问、
 不需要 GitHub Pages、本地开发也能查看。
@@ -296,7 +341,7 @@ Catalog 只包含元数据，不包含 flag 值；只有带 `src/Dockerfile` 的
 
 ```text
 Event private repo
-  └─ ./scripts/sync-event.sh     # validate + 更新 event manifest / docs
+  └─ ./scripts/sync-event.sh     # 扫描内容 → 更新 event manifest / docs → validate
   └─ ./scripts/publish.sh        # 推送到 upstream event/<event-id> 并创建 PR
         └─ Pull Request          # validate + catalog 生成测试 + unittest
               └─ main            # validate + unittest + 重新生成 catalog.json

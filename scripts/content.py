@@ -83,6 +83,14 @@ TEXT_FIELDS: tuple[str, ...] = (
     "description",
 )
 
+#: Event fields copied straight into the catalog, so they must be present.
+EVENT_REQUIRED_TEXT_FIELDS: tuple[str, ...] = (
+    "title",
+    "description",
+    "started_at",
+    "ended_at",
+)
+
 POSITIVE_RESOURCE_FIELDS: tuple[str, ...] = (
     "cpu_millis",
     "memory_bytes",
@@ -310,7 +318,9 @@ def scan_contents(
             Content(
                 id=directory.name,
                 type=content_type,
-                path=directory,
+                # Kept relative to *root* so ``root / content.path`` is correct
+                # for both absolute and relative roots.
+                path=Path(CONTENT_DIRS[content_type]) / directory.name,
                 meta=meta,
             )
         )
@@ -347,6 +357,23 @@ def _event_reference_array(
     return [value.strip() for value in values]
 
 
+def _validate_event_text_fields(
+    meta: dict[str, Any],
+    display: str,
+    errors: list[str] | None,
+) -> None:
+    """Require the event fields the catalog exposes."""
+
+    for name in EVENT_REQUIRED_TEXT_FIELDS:
+        if name not in meta:
+            _report(errors, f"{display}: missing field '{name}'")
+        elif not isinstance(meta[name], str) or not meta[name].strip():
+            _report(
+                errors,
+                f"{display}: field '{name}' must be a non-empty string",
+            )
+
+
 def load_events(root: Path, errors: list[str] | None = None) -> list[Event]:
     """Load ``events/*.toml`` sorted by event id."""
 
@@ -379,6 +406,8 @@ def load_events(root: Path, errors: list[str] | None = None) -> list[Event]:
                 errors,
                 f"{display}: id must match file name '{path.stem}'",
             )
+
+        _validate_event_text_fields(meta, display, errors)
 
         events.append(
             Event(
@@ -687,9 +716,12 @@ def content_entry(
         "description": meta.get("description", ""),
     }
 
-    # Only container content publishes an image; attachment-only content is
-    # simply served without one.
-    if has_dockerfile(content, root):
+    # Only container content publishes an image and runtime configuration;
+    # static / attachment-only content carries neither, even when its
+    # meta.toml declares a [docker] table.
+    container = has_dockerfile(content, root)
+
+    if container:
         entry["image"] = image_ref(content)
 
     flag = _flag_entry(meta)
@@ -697,10 +729,11 @@ def content_entry(
     if flag is not None:
         entry["flag"] = flag
 
-    docker = _docker_entry(meta)
+    if container:
+        docker = _docker_entry(meta)
 
-    if docker is not None:
-        entry["docker"] = docker
+        if docker is not None:
+            entry["docker"] = docker
 
     entry["events"] = sorted(set(event_ids))
 

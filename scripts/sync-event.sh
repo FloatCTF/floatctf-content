@@ -24,22 +24,13 @@ command -v python3 >/dev/null 2>&1 ||
     die "python3 is required"
 
 # -----------------------------------------------------------------------------
-# Metadata validation
-# -----------------------------------------------------------------------------
-
-# scripts/content.py is the single source of truth for metadata validation.
-# Event repositories created from an older event/base branch may not have it
-# yet; in that case fall back to the checks further down.
-if [[ -f scripts/content.py ]]; then
-    echo "==> Validating content metadata"
-    python3 scripts/content.py validate
-else
-    echo "warning: scripts/content.py not found; skipping metadata validation" >&2
-fi
-
-# -----------------------------------------------------------------------------
 # Event manifest and documentation
 # -----------------------------------------------------------------------------
+#
+# The generated block is refreshed from the directories that actually exist
+# *before* the full metadata validation runs. Otherwise removing or renaming a
+# challenge would deadlock: the stale event reference would fail validation
+# while this script is exactly what removes it.
 
 python3 - "$EVENT" "$EVENT_FILE" "$DOC_FILE" <<'PY'
 from __future__ import annotations
@@ -363,3 +354,18 @@ print(f"  GameBoxes:  {len(gameboxes)}")
 print(f"  Manifest:   {EVENT_FILE}")
 print(f"  Document:   {DOC_FILE}")
 PY
+
+# -----------------------------------------------------------------------------
+# Metadata validation
+# -----------------------------------------------------------------------------
+
+# scripts/content.py is the single source of truth for metadata validation and
+# runs on the synced tree. Event repositories created from an older event/base
+# branch may not have it yet; in that case only the checks inside the sync
+# block above apply.
+if [[ -f scripts/content.py ]]; then
+    echo "==> Validating content metadata"
+    python3 scripts/content.py validate
+else
+    echo "warning: scripts/content.py not found; skipping metadata validation" >&2
+fi
