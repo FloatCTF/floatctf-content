@@ -177,7 +177,7 @@ name  version  author  category  difficulty  tags  description
 |------|------|
 | `difficulty` | `unknown` / `beginner` / `easy` / `medium` / `hard` / `expert` |
 | `tags` | 字符串数组，可以为空数组，每项必须是非空字符串 |
-| `safe_name` | 可选；Docker repository 名，必须匹配 `^[a-z0-9]+(?:[._-][a-z0-9]+)*$` |
+| `safe_name` | 可选字段；未填写时由目录名自动派生。所有 Challenge / GameBox 都必须最终得到合法的 `safe_name`；自动派生失败时必须显式填写 |
 
 - `version` 使用 `x.y.z`（SemVer），例如 `1.0.0`。
 - `category` 不限制取值，现有内容使用 `ai` / `crypto` / `misc` / `pwn` / `reverse` / `web`。
@@ -187,9 +187,13 @@ name  version  author  category  difficulty  tags  description
 
 ### safe_name
 
-`safe_name` 是 Docker repository 名，`id` 可以包含空格、大写、撇号甚至中文，
-`safe_name` 必须始终是合法的 Docker repository 名。
+所有 Challenge / GameBox 都必须拥有有效的 `safe_name`，无论它是 container
+还是 static / attachment-only 内容。
+`meta.toml` 中的 `safe_name` 字段本身可以省略，此时由目录名自动派生；
+如果无法自动派生，则必须显式填写。
 
+`safe_name` 是 Docker repository 名（必须匹配
+`^[a-z0-9]+(?:[._-][a-z0-9]+)*$`），而 `id` 可以包含空格、大写、撇号甚至中文。
 没有显式写 `safe_name` 时，由**目录名**自动派生：
 
 ```text
