@@ -1,0 +1,8 @@
+name = "broken_safe_name"
+version = "1.0.0"
+author = "dev@floatctf.local"
+category = "web"
+difficulty = "easy"
+tags = []
+description = "upper case and a space are not a valid Docker repository name"
+safe_name = "Foo Bar"

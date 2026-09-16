@@ -1,0 +1,18 @@
+schema_version = 1
+
+id = "dup"
+title = "duplicate references"
+description = "the same content listed twice must not validate"
+started_at = "2025-01-01 10:00"
+ended_at = "2025-01-01 18:00"
+
+[content]
+challenges = [
+    "broken_version",
+    "broken_version",
+]
+
+gameboxes = [
+    "box",
+    "box",
+]

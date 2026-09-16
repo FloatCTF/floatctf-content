@@ -20,6 +20,7 @@ import re
 import subprocess
 import sys
 import tomllib
+import unicodedata
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Iterable, NoReturn, Sequence
@@ -51,6 +52,9 @@ SOURCE_SUBDIR = "src"
 DOCKERFILE_NAME = "Dockerfile"
 
 VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
+
+#: Valid Docker repository name used as ``floatctf/<safe_name>``.
+SAFE_NAME_PATTERN = re.compile(r"^[a-z0-9]+(?:[._-][a-z0-9]+)*$")
 
 DIFFICULTIES: tuple[str, ...] = (
     "unknown",
@@ -99,6 +103,56 @@ class ContentError(Exception):
 
 
 # ---------------------------------------------------------------------------
+# Docker safe names
+# ---------------------------------------------------------------------------
+
+
+def derive_safe_name(content_id: str) -> str:
+    """Derive a Docker repository name from a content id.
+
+    ``Cirno's perfect math class`` becomes ``cirnos-perfect-math-class``.
+    Returns an empty string when nothing usable is left, in which case the
+    content must set ``safe_name`` explicitly.
+    """
+
+    name = content_id.lower()
+    name = unicodedata.normalize("NFKD", name)
+    name = "".join(char for char in name if not unicodedata.combining(char))
+    name = name.replace("'", "").replace("\u2019", "")
+    name = re.sub(r"[^a-z0-9._-]+", "-", name)
+    name = re.sub(r"[._-]{2,}", "-", name)
+    name = name.strip("._-")
+
+    if not SAFE_NAME_PATTERN.match(name):
+        return ""
+
+    return name
+
+
+def explicit_safe_name(meta: dict[str, Any]) -> str | None:
+    """Return the explicit ``safe_name`` when it is a usable string."""
+
+    value = meta.get("safe_name")
+
+    if isinstance(value, str) and value.strip():
+        return value.strip()
+
+    return None
+
+
+def dockerfile_path(content: "Content", root: Path) -> Path:
+    """Return the Dockerfile path of *content* below *root*."""
+
+    return root / content.path / SOURCE_SUBDIR / DOCKERFILE_NAME
+
+
+def has_dockerfile(content: "Content", root: Path) -> bool:
+    """True when *content* is a container (``src/Dockerfile`` exists)."""
+
+    return dockerfile_path(content, root).is_file()
+
+
+# ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
 
@@ -115,6 +169,12 @@ class Content:
     @property
     def version(self) -> str:
         return str(self.meta.get("version", ""))
+
+    @property
+    def safe_name(self) -> str:
+        """Docker repository name: explicit ``safe_name`` or derived from id."""
+
+        return explicit_safe_name(self.meta) or derive_safe_name(self.id)
 
     @property
     def meta_path(self) -> Path:
@@ -398,6 +458,17 @@ def validate_meta(content: Content, root: Path) -> list[str]:
                 f"{display}: field 'tags' must be an array of non-empty strings"
             )
 
+    if "safe_name" in meta:
+        safe_name = explicit_safe_name(meta)
+
+        if safe_name is None or not SAFE_NAME_PATTERN.match(safe_name):
+            errors.append(f"{display}: invalid safe_name {meta['safe_name']!r}")
+    elif not derive_safe_name(content.id):
+        errors.append(
+            f"{display}: unable to derive Docker safe_name; "
+            f"set safe_name explicitly"
+        )
+
     docker = meta.get("docker")
 
     if docker is not None:
@@ -437,6 +508,46 @@ def validate_meta(content: Content, root: Path) -> list[str]:
     return errors
 
 
+def _duplicate_values(values: Sequence[str]) -> list[str]:
+    """Return the values that occur more than once, sorted."""
+
+    seen: set[str] = set()
+    duplicates: set[str] = set()
+
+    for value in values:
+        if value in seen:
+            duplicates.add(value)
+        seen.add(value)
+
+    return sorted(duplicates)
+
+
+def _safe_name_errors(contents: Sequence[Content]) -> list[str]:
+    """Return duplicate Docker safe_name errors for one content type."""
+
+    grouped: dict[str, list[Content]] = {}
+
+    for content in contents:
+        safe_name = content.safe_name
+
+        # Invalid or underivable names are already reported by validate_meta.
+        if safe_name and SAFE_NAME_PATTERN.match(safe_name):
+            grouped.setdefault(safe_name, []).append(content)
+
+    errors: list[str] = []
+
+    for safe_name, items in sorted(grouped.items()):
+        if len(items) < 2:
+            continue
+
+        names = "' and '".join(sorted(item.id for item in items))
+        errors.append(
+            f"duplicate {items[0].type} safe_name '{safe_name}': '{names}'"
+        )
+
+    return errors
+
+
 def validate(root: Path) -> ValidationResult:
     """Validate all content and events below *root*."""
 
@@ -448,6 +559,11 @@ def validate(root: Path) -> ValidationResult:
     for content in (*challenges, *gameboxes):
         errors.extend(validate_meta(content, root))
 
+    # Safe names must be unique per content type; a challenge and a gamebox may
+    # share one because their image tags differ.
+    errors.extend(_safe_name_errors(challenges))
+    errors.extend(_safe_name_errors(gameboxes))
+
     events = load_events(root, errors)
 
     challenge_ids = {content.id for content in challenges}
@@ -455,6 +571,12 @@ def validate(root: Path) -> ValidationResult:
 
     for event in events:
         display = _display(event.path, root)
+
+        for reference in _duplicate_values(event.challenges):
+            errors.append(f"{display}: duplicate challenge '{reference}'")
+
+        for reference in _duplicate_values(event.gameboxes):
+            errors.append(f"{display}: duplicate gamebox '{reference}'")
 
         for reference in event.challenges:
             if reference not in challenge_ids:
@@ -478,10 +600,23 @@ def validate(root: Path) -> ValidationResult:
 
 
 def image_ref(content: Content) -> str:
-    """Return ``floatctf/{id}:{type}-v{version}``."""
+    """Return ``floatctf/{safe_name}:{type}-v{version}``."""
+
+    safe_name = content.safe_name
+
+    if not safe_name:
+        raise ContentError(
+            f"{content.meta_path.as_posix()}: unable to derive Docker "
+            f"safe_name; set safe_name explicitly"
+        )
+
+    if not SAFE_NAME_PATTERN.match(safe_name):
+        raise ContentError(
+            f"{content.meta_path.as_posix()}: invalid safe_name {safe_name!r}"
+        )
 
     return (
-        f"{IMAGE_NAMESPACE}/{content.id}"
+        f"{IMAGE_NAMESPACE}/{safe_name}"
         f":{content.type}-v{content.version}"
     )
 
@@ -651,7 +786,11 @@ def _docker_entry(meta: dict[str, Any]) -> dict[str, Any] | None:
     return entry or None
 
 
-def content_entry(content: Content, event_ids: Sequence[str]) -> dict[str, Any]:
+def content_entry(
+    content: Content,
+    event_ids: Sequence[str],
+    root: Path,
+) -> dict[str, Any]:
     """Build the catalog entry for one challenge or gamebox."""
 
     meta = content.meta
@@ -665,8 +804,12 @@ def content_entry(content: Content, event_ids: Sequence[str]) -> dict[str, Any]:
         "difficulty": meta.get("difficulty", ""),
         "tags": list(meta.get("tags", [])),
         "description": meta.get("description", ""),
-        "image": image_ref(content),
     }
+
+    # Only container content publishes an image; attachment-only content is
+    # simply served without one.
+    if has_dockerfile(content, root):
+        entry["image"] = image_ref(content)
 
     flag = _flag_entry(meta)
 
@@ -712,11 +855,11 @@ def build_catalog(root: Path) -> dict[str, Any]:
     return {
         "version": CATALOG_VERSION,
         "challenges": [
-            content_entry(content, challenge_events.get(content.id, []))
+            content_entry(content, challenge_events.get(content.id, []), root)
             for content in sorted(challenges, key=lambda item: item.id)
         ],
         "gameboxes": [
-            content_entry(content, gamebox_events.get(content.id, []))
+            content_entry(content, gamebox_events.get(content.id, []), root)
             for content in sorted(gameboxes, key=lambda item: item.id)
         ],
         "events": [
@@ -876,6 +1019,15 @@ def cmd_validate(args: argparse.Namespace) -> int:
 
 def cmd_catalog(args: argparse.Namespace) -> int:
     root = Path(args.root)
+
+    # Never write a catalog derived from broken metadata.
+    result = validate(root)
+
+    if result.errors:
+        for message in result.errors:
+            print(f"error: {message}", file=sys.stderr)
+        return 1
+
     rendered = render_catalog(build_catalog(root))
 
     if args.check:
@@ -895,8 +1047,10 @@ def cmd_catalog(args: argparse.Namespace) -> int:
         print(f"{CATALOG_FILE} is up to date")
         return 0
 
-    (root / CATALOG_FILE).write_text(rendered, encoding="utf-8")
-    print(f"Wrote {CATALOG_FILE}")
+    target = Path(args.output) if args.output else root / CATALOG_FILE
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(rendered, encoding="utf-8")
+    print(f"Wrote {target.as_posix()}")
 
     return 0
 
@@ -989,10 +1143,16 @@ def build_parser() -> argparse.ArgumentParser:
         parents=[common],
         help="generate catalog.json",
     )
-    catalog_parser.add_argument(
+    catalog_group = catalog_parser.add_mutually_exclusive_group()
+    catalog_group.add_argument(
         "--check",
         action="store_true",
         help="fail when catalog.json is out of date instead of writing it",
+    )
+    catalog_group.add_argument(
+        "--output",
+        metavar="FILE",
+        help="write the catalog to FILE (default: <root>/catalog.json)",
     )
     catalog_parser.set_defaults(func=cmd_catalog)
 

@@ -50,8 +50,13 @@ jobs:
       - name: Validate content metadata
         run: python3 scripts/content.py validate
 
-      - name: Check catalog.json is up to date
-        run: python3 scripts/content.py catalog --check
+      # Catalog generation must succeed, but the committed catalog.json is
+      # refreshed by the catalog job on main only: pull requests are not
+      # required to keep it up to date.
+      - name: Check catalog can be generated
+        run: |
+          python3 scripts/content.py catalog --output /tmp/floatctf-catalog.json
+          test -s /tmp/floatctf-catalog.json
 
       - name: Run unit tests
         run: python3 -m unittest discover -s scripts/tests -v
@@ -113,8 +118,9 @@ jobs:
     if: needs.detect.outputs.paths != '[]' && needs.detect.outputs.paths != ''
     runs-on: ubuntu-latest
     env:
-      # Pull requests only build; push and manual runs publish.
-      PUBLISH: ${{ github.event_name == 'push' || github.event_name == 'workflow_dispatch' }}
+      # Only main publishes to Docker Hub. Pull requests and manual runs on
+      # any other branch build but never log in, push or commit.
+      PUBLISH: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
     strategy:
       fail-fast: false
       matrix:
@@ -144,6 +150,23 @@ jobs:
           python3 scripts/content.py image-meta "${{ matrix.path }}" \
             --github-output "$GITHUB_OUTPUT"
 
+      # Released tags are immutable: an existing tag means the version must be
+      # bumped in meta.toml instead of overwriting a published image.
+      - name: Check image tag is not published yet
+        if: env.PUBLISH == 'true'
+        env:
+          IMAGE: ${{ steps.image.outputs.image }}
+        run: |
+          set -euo pipefail
+
+          if docker buildx imagetools inspect "$IMAGE" >/dev/null 2>&1; then
+            echo "error: image already exists: $IMAGE" >&2
+            echo "bump version in meta.toml before publishing" >&2
+            exit 1
+          fi
+
+          echo "tag is free: $IMAGE"
+
       - name: Build and push image
         uses: docker/build-push-action@v6
         with:
@@ -163,7 +186,8 @@ jobs:
       - build
     if: |
       always()
-      && github.event_name != 'pull_request'
+      && github.ref == 'refs/heads/main'
+      && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
       && needs.validate.result == 'success'
       && needs.detect.result == 'success'
       && (needs.build.result == 'success' || needs.build.result == 'skipped')

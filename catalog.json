@@ -10,7 +10,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "简单的android逆向",
-      "image": "floatctf/Android_reverse:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -27,7 +26,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "琪露诺发现幻想乡巴士里有base编码",
-      "image": "floatctf/Cirno's perfect math class:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -44,7 +42,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": ".pt？这是什么后缀名？",
-      "image": "floatctf/Flag_in_the_model:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -61,7 +58,7 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "大喊FloatCTF启动来获得flag吧",
-      "image": "floatctf/FloatCTF-qidong:challenge-v1.0.0",
+      "image": "floatctf/floatctf-qidong:challenge-v1.0.0",
       "flag": {
         "type": "dynamic"
       },
@@ -86,7 +83,7 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "我是耄耋，我还活着，拿nc拯救我吧，哈！！！",
-      "image": "floatctf/Hajimi:challenge-v1.0.0",
+      "image": "floatctf/hajimi:challenge-v1.0.0",
       "flag": {
         "type": "dynamic"
       },
@@ -111,7 +108,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "smali后缀文件，何意味",
-      "image": "floatctf/Smali:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -178,7 +174,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "ZmxhZ3tiMWQxZmNmNy01NzQyLTQ0OTctODYwOC1iZGU1NDlmMWQ1MmV9",
-      "image": "floatctf/base64:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -195,7 +190,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "凯撒大帝的秘密信息！\n\n密文：iordwfwi{fdhvdu_flskhu_lv_hdvb}\n\n提示1：这是最古老的加密方法之一\n提示2：凯撒密码的位移量通常在 1-25 之间\n提示3：试试往回移动 3 位\n",
-      "image": "floatctf/caesar:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -265,7 +259,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "这图片好像缺点什么",
-      "image": "floatctf/ctf_start:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -307,7 +300,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "使用tea算法进行解密,答案使用flag{}进行包裹",
-      "image": "floatctf/easy_reverse:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -349,7 +341,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "小町摸鱼时会写小说,她可能会将小说变成zip包来存储",
-      "image": "floatctf/komachi's book:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -391,7 +382,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "你告诉我什么叫矩阵RSA？",
-      "image": "floatctf/matrix_rsa:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -408,7 +398,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "这图片好像缺点什么",
-      "image": "floatctf/miku_flag:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -425,7 +414,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "阿燐在她的猫车中找到一个神秘压缩包",
-      "image": "floatctf/orin's pack:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -467,7 +455,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "图片里面有什么",
-      "image": "floatctf/png:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -534,7 +521,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "找到了一串字符串，要用什么算法解密呢",
-      "image": "floatctf/strings_attached1:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -551,7 +537,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "和某一道题加密算法一样，但好像又有一些不同",
-      "image": "floatctf/strings_attached2:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },
@@ -568,7 +553,6 @@
       "difficulty": "unknown",
       "tags": [],
       "description": "这里是西藏民族大学动漫社，欢迎来玩",
-      "image": "floatctf/xzmu_anime_club:challenge-v1.0.0",
       "flag": {
         "type": "static"
       },

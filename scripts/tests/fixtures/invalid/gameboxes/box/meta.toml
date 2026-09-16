@@ -1,0 +1,7 @@
+name = "box"
+version = "1.0.0"
+author = "dev@floatctf.local"
+category = "misc"
+difficulty = "easy"
+tags = []
+description = "referenced twice by events/dup.toml"
